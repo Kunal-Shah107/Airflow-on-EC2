@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This template deploys a RDS PostgreSQL for Airflow EC2"
+Parameters:
+  DBInstanceIdentifier:
+    Type: String
+    Default: "Airflow-EC2-RDS"
+  DBEngine:
+    Type: String
+    Default: "postgres"
+  DBEngineVersion:
+    Type: String
+    Default: "13.3"
+  DBSourceRegion:
+    Type: String
+    Default: "(Region Name)"
+  DBInstanceClass:
+    Type: String
+    Default: "db.t3.medium"
+  DBStorageType:
+    Type: String
+    Default: "gp2"
+  DBAllocatedStorage:
+    Type: Number
+    Default: 20
+  DBName:
+    Type: String
+    Default: "(DB Name)"
+  DBUser:
+    Type: String
+    Default: "airflow"
+  DBPassword:
+    Type: String
+    Default: "airflow"
+    NoEcho: True
+  DBSubnetGroupName:
+    Type: String
+    Default: "default-(VPC-ID)"
+  StorageEncrypted:
+    Type: String
+    Default: "true"
+  KmsKeyId:
+    Type: String
+    Default: "(Default KMS Key ID)"
+  VPCSecurityGroups:
+    Type: 'List<AWS::EC2::SecurityGroup::Id>'
+    Default: (Security Group ID)
+  
+    
+Resources:
+  AirflowRDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier:
+        Ref: DBInstanceIdentifier
+      DBName:
+        Ref: DBName
+      AllocatedStorage:
+        Ref: DBAllocatedStorage
+      DBInstanceClass:
+        Ref: DBInstanceClass
+      StorageType:
+        Ref: DBStorageType
+      Engine:
+        Ref: DBEngine
+      EngineVersion:
+        Ref: DBEngineVersion
+      MasterUsername:
+        Ref: DBUser
+      MasterUserPassword:
+        Ref: DBPassword
+      DBSubnetGroupName:
+        Ref: DBSubnetGroupName
+      StorageEncrypted:
+        Ref: StorageEncrypted
+      KmsKeyId:
+        Ref: KmsKeyId
+      VPCSecurityGroups:
+        Ref: VPCSecurityGroups
+      Tags:
+        - Key: Project
+          Value: "Airflow EC2 - RDS PostgreSQL"
+ 
+Outputs:
+  EndpointMaster:
+    Description: "Endpoint of the newly created RDS PostgreSQL master"
+    Value: !GetAtt AirflowRDS.Endpoint.Address
+  PortDB:
+    Description: "Port of the newly created RDS PostgreSQL master and replica"
+    Value: !GetAtt AirflowRDS.Endpoint.Port

@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to Create an EC2 instance in a Existing VPC
+   
+Parameters:
+
+  ImageId:
+    Type: String
+    Description: 'Ubuntu AMI for EC2 Bastion Used for deploying Airflow on EC2'
+    Default: (Ubuntu AMI ID as per your region)
+  VpcId:
+    Type: String
+    Description: VPC id
+    Default: (Your VPC ID)
+  SubnetId:
+    Type: String
+    Description: Subnet in which to launch an EC2
+    Default: (Your Subnet ID)
+  AvailabilityZone:
+    Type: String
+    Description: Availability Zone into which instance will launch
+    Default: (AvailabilityZone ID)
+  InstanceType:
+    Type: String
+    Description: Choose t2 micro because it is sufficient as per requirement.
+    Default: (Instance Type)
+  KeyName:
+    Description: SSH Keypair to login to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: (Key Pair Name)
+
+Resources:
+  AirflowEC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties: 
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      AvailabilityZone: !Ref AvailabilityZone
+      KeyName: !Ref KeyName
+      SecurityGroupIds: 
+        - !Ref AirflowEC2SecurityGroup
+      SubnetId: !Ref SubnetId
+
+  AirflowEC2SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VpcId
+      GroupDescription: SG to allow SSH/RDP access to Airflow-EC2 Instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '3389'
+          ToPort: '3389'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: all
+          CidrIp: '0.0.0.0/0'          
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: all
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'        
+      Tags:
+        - Key: Name
+          Value: Airflow-EC2-SG
+
+Outputs:
+  AirflowEC2InstanceId:
+    Description: Instance Id 
+    Value: !Ref AirflowEC2Instance
